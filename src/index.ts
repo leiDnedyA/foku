@@ -16,7 +16,7 @@ const onCloseSignal = () => {
     console.log("Server closed.");
     process.exit();
   });
-  setTimeout(() => process.exit(1), 10_000).unref();
+  setTimeout(() => process.exit(1), 2_000).unref();
 }
 
 process.on("SIGINT", onCloseSignal);
