@@ -8,6 +8,17 @@ const POT_RADIUS = 1.15;
 const PIT_SPACING = 2.1;
 const ROW_Z = 1.7;
 
+// can be null, 0, or 1 => nobody's turn, player 1, player 2
+let turnViewState = null;
+
+const TURN_CAMERA_POSITIONS = {
+  null: [0, 13, 11],
+  0: [-13, 13, 11],
+  1: [13, 13, 11],
+}
+
+const CAMERA_LOOKAT = [0, 0, 0.5];
+
 /**
  * Board index -> world position on top of the board.
  * Pot 0 sits at -x, pot 7 at +x. Pits 1-6 run along the near row
@@ -70,14 +81,25 @@ export function createRenderer3D(container) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x111111);
 
+  const targetCameraPosition = new THREE.Vector3();
+  const targetCameraLookAt = new THREE.Vector3();
+  const currentCameraLookAt = new THREE.Vector3();
+
+  function moveCameraTo(position, lookAt) {
+    targetCameraPosition.copy(position);
+    targetCameraLookAt.copy(lookAt);
+  }
+
   const camera = new THREE.PerspectiveCamera(
     45,
     container.clientWidth / container.clientHeight,
     0.1,
     100
   );
-  camera.position.set(0, 13, 11);
-  camera.lookAt(0, 0, 0.5);
+
+  camera.position.set(...TURN_CAMERA_POSITIONS[null]);
+  camera.lookAt(...CAMERA_LOOKAT);
+  moveCameraTo(camera.position, new THREE.Vector3(...CAMERA_LOOKAT))
 
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(window.devicePixelRatio);
@@ -169,7 +191,7 @@ export function createRenderer3D(container) {
   highlight.visible = false;
   scene.add(highlight);
 
-  function render(state, selectedIndex = null) {
+  function render(state, selectedIndex = null, turn = null) {
     for (let index = 0; index < 14; index++) {
       const view = pitViews[index];
       const count = state[index];
@@ -198,6 +220,11 @@ export function createRenderer3D(container) {
       highlight.visible = true;
       highlight.position.set(x, 0.1, z);
     }
+
+    if (turn !== turnViewState) {
+      turnViewState = turn;
+      moveCameraTo(new THREE.Vector3(...TURN_CAMERA_POSITIONS[turn]), new THREE.Vector3(...CAMERA_LOOKAT))
+    }
   }
 
   // Gentle pulse on the highlight ring so the selection reads from a couch.
@@ -206,8 +233,16 @@ export function createRenderer3D(container) {
     const t = performance.now() / 1000;
     const pulse = 1 + Math.sin(t * 4) * 0.06;
     highlight.scale.set(pulse, pulse, 1);
+
+    const cameraMoveSpeed = 0.05;
+
+    camera.position.lerp(targetCameraPosition, cameraMoveSpeed);
+    currentCameraLookAt.lerp(targetCameraLookAt, cameraMoveSpeed);
+    camera.lookAt(currentCameraLookAt);
+
     renderer.render(scene, camera);
   }
+
   animate();
 
   return { render };

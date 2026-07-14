@@ -58,7 +58,7 @@ function updateHud() {
 }
 
 function draw() {
-  renderer3d.render(board, sowing || gameOver ? null : selected);
+  renderer3d.render(board, sowing || gameOver ? null : selected, turn);
   updateHud();
 }
 
@@ -95,7 +95,7 @@ async function playMove() {
     board,
     selected,
     async (state, index) => {
-      renderer3d.render(state, index);
+      renderer3d.render(state, index, turn);
       await new Promise(resolve => setTimeout(resolve, SOW_STEP_MS));
     },
     opponentPot
