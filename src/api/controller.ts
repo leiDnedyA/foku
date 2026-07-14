@@ -39,6 +39,7 @@ controllerRouter.get("/", async (_req, res) => {
     button:active { background: #555; }
     #up    { grid-area: 1 / 2; }
     #left  { grid-area: 2 / 1; }
+    #ok    { grid-area: 2 / 2; }
     #right { grid-area: 2 / 3; }
     #down  { grid-area: 3 / 2; }
     #status { color: #888; font-size: 0.9rem; }
@@ -49,6 +50,7 @@ controllerRouter.get("/", async (_req, res) => {
   <div id="dpad">
     <button id="up" data-direction="up">&#8593;</button>
     <button id="left" data-direction="left">&#8592;</button>
+    <button id="ok" data-direction="ok">ok</button>
     <button id="right" data-direction="right">&#8594;</button>
     <button id="down" data-direction="down">&#8595;</button>
   </div>
