@@ -1,13 +1,24 @@
-import { app } from './server';
+import { app as expressApp } from './server';
 import { loadEnv } from './util/env';
+import { app as electronApp, BrowserWindow } from 'electron';
 import path from 'path';
 
 if (!require.main) throw new Error("You have seriously fucked up");
 
-loadEnv(path.join(require.main.filename, '../../.env'));
+loadEnv(path.resolve(__dirname, '../.env'));
 
-const server = app.listen(process.env.PORT, () => {
+let mainWindow: BrowserWindow | null = null;
+
+const server = expressApp.listen(process.env.PORT, () => {
   console.log(`Server listening on ${process.env.PORT}`)
+})
+
+electronApp.whenReady().then(() => {
+  mainWindow = new BrowserWindow({
+    width: 1200,
+    height: 800
+  })
+  mainWindow.loadURL("https://example.com/")
 })
 
 const onCloseSignal = () => {
