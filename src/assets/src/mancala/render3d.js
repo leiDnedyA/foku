@@ -171,8 +171,8 @@ export function createRenderer3D(container) {
 
   // Pits, pots, stones, labels
   const stoneGeometry = new THREE.SphereGeometry(0.26, 20, 14);
-  const stoneMaterials = [0x9db4c8, 0x8fa8c0, 0xa8b8b0, 0xb0a493].map(
-    color => new THREE.MeshStandardMaterial({ color, roughness: 0.35, metalness: 0.15 })
+  const stoneMaterials = [0xff0000, 0xffff00, 0x0000ff, 0x00aa33].map(
+    color => new THREE.MeshPhysicalMaterial({ color, transparent: true, opacity: .9, roughness: 0.35, metalness: 0.15 })
   );
 
   const pitViews = [];
