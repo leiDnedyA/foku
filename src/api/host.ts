@@ -4,9 +4,10 @@ import { generateQRCodeBuffer } from "./qr";
 import path from 'path';
 
 export const hostRouter = express.Router();
+const assetsPath = path.resolve(__dirname, '../assets');
 
 hostRouter.get("/", async (_req, res) => {
-  res.type("html").sendFile(path.resolve(__dirname, '../assets/index.html'));
+  res.type("html").sendFile(path.join(assetsPath, 'index.html'));
 });
 
 hostRouter.get("/qr.png", async (_req, res) => {
@@ -15,3 +16,5 @@ hostRouter.get("/qr.png", async (_req, res) => {
   res.type("image/png");
   res.send(buffer);
 });
+
+hostRouter.use(express.static(assetsPath));
