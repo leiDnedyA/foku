@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "electron dist/index.js",
-    "build": "tsc",
+    "build": "tsc && cp -r src/assets dist/assets",
     "clean": "rm -rf dist"
   },
   "repository": {
