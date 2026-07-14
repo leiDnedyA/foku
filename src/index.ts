@@ -1,4 +1,5 @@
 import { app as expressApp } from './server';
+import { setupWebSockets } from './api/socket';
 import { loadEnv } from './util/env';
 import { app as electronApp, BrowserWindow } from 'electron';
 import path from 'path';
@@ -13,12 +14,14 @@ const server = expressApp.listen(process.env.PORT, () => {
   console.log(`Server listening on ${process.env.PORT}`)
 })
 
+setupWebSockets(server);
+
 electronApp.whenReady().then(() => {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800
   })
-  mainWindow.loadURL("https://example.com/")
+  mainWindow.loadURL(`http://localhost:${process.env.PORT}/host`)
 })
 
 const onCloseSignal = () => {
