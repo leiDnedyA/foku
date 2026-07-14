@@ -2,33 +2,74 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>foku</title>
+  <title>foku — mancala</title>
   <style>
     body {
       margin: 0;
       height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 1.5rem;
+      overflow: hidden;
       background: #111;
       color: #eee;
       font-family: sans-serif;
     }
-    img { image-rendering: pixelated; background: #fff; border-radius: 8px; }
-    #last-press { font-size: 3rem; min-height: 4rem; }
-    #status { color: #888; font-size: 0.9rem; }
+    #scene {
+      position: fixed;
+      inset: 0;
+    }
+    #hud {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 1rem;
+      pointer-events: none;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+    }
+    #hud h1 { margin: 0; font-size: 1.4rem; letter-spacing: 0.2em; color: #aaa; }
+    #turn { font-size: 1.6rem; font-weight: bold; min-height: 2rem; }
+    #message { font-size: 1.2rem; color: #ffd777; min-height: 1.5rem; }
+    #join {
+      position: fixed;
+      right: 1rem;
+      bottom: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      pointer-events: none;
+    }
+    #join img {
+      image-rendering: pixelated;
+      background: #fff;
+      border-radius: 8px;
+      width: 110px;
+      height: 110px;
+    }
+    #status { color: #888; font-size: 0.85rem; max-width: 14rem; text-align: center; }
   </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"
+      }
+    }
+  </script>
 </head>
 <body>
-  <h1>foku</h1>
-  <p>Scan to use your phone as a remote:</p>
-  <pre id="board"></pre>
-  <p>here</p>
-  <img id="qr-code" src="/host/qr.png" alt="QR code for controller url" width="200" height="200">
-  <p id="status">Waiting for controller...</p>
-  <div id="last-press"></div>
+  <div id="scene"></div>
+  <div id="hud">
+    <h1>MANCALA</h1>
+    <div id="turn"></div>
+    <div id="message"></div>
+  </div>
+  <div id="join">
+    <img id="qr-code" src="/host/qr.png" alt="QR code for controller url">
+    <p id="status">Waiting for controller...</p>
+  </div>
   <script type="module" src="/host/index.js"></script>
 </body>
 </html>

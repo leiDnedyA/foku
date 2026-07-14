@@ -1,40 +1,186 @@
-import { asciiDrawMancalaBoard, BASE_BOARD_STATE, getNextBoardState } from './src/mancala/core.js';
-const status = document.getElementById('status');
-const lastPress = document.getElementById('last-press');
-const arrows = { up: '\\u2191', down: '\\u2193', left: '\\u2190', right: '\\u2192' };
+import {
+  BASE_BOARD_STATE,
+  getNextBoardState,
+  PLAYERS,
+  sideEmpty,
+  sweepRemaining
+} from './src/mancala/core.js';
+import { createRenderer3D } from './src/mancala/render3d.js';
 
-const boardElement = document.querySelector("#board");
-function renderBoard(currMancalaBoard, selectedMancalaIdx) {
-  boardElement.innerText = asciiDrawMancalaBoard(currMancalaBoard, selectedMancalaIdx);
+const status = document.getElementById('status');
+const turnDisplay = document.getElementById('turn');
+const messageDisplay = document.getElementById('message');
+
+const PLAYER_NAMES = ['Player 1', 'Player 2'];
+const PLAYER_COLORS = ['#6fb3ff', '#ff9d6f'];
+const SOW_STEP_MS = 450;
+
+const renderer3d = createRenderer3D(document.getElementById('scene'));
+
+// --- Game state ---
+let board = [...BASE_BOARD_STATE];
+let turn = 0;
+let selected = null;
+let sowing = false;
+let gameOver = false;
+
+// controllerId -> player (0 or 1)
+const assignments = new Map();
+
+function assignedPlayerCount() {
+  return new Set(assignments.values()).size;
+}
+
+function firstNonEmptyPit(player) {
+  return PLAYERS[player].pits.find(index => board[index] > 0) ?? null;
+}
+
+function cycleSelection(direction) {
+  const pits = PLAYERS[turn].pits;
+  if (pits.every(index => board[index] === 0)) return;
+  let position = selected === null ? 0 : pits.indexOf(selected);
+  for (let step = 0; step < pits.length; step++) {
+    position = (position + direction + pits.length) % pits.length;
+    if (board[pits[position]] > 0) {
+      selected = pits[position];
+      return;
+    }
+  }
+}
+
+function updateHud() {
+  if (gameOver) {
+    turnDisplay.textContent = '';
+    return;
+  }
+  turnDisplay.textContent = `${PLAYER_NAMES[turn]}'s turn`;
+  turnDisplay.style.color = PLAYER_COLORS[turn];
+}
+
+function draw() {
+  renderer3d.render(board, sowing || gameOver ? null : selected);
+  updateHud();
+}
+
+function resetGame() {
+  board = [...BASE_BOARD_STATE];
+  turn = 0;
+  gameOver = false;
+  sowing = false;
+  selected = firstNonEmptyPit(turn);
+  messageDisplay.textContent = '';
+  draw();
+}
+
+function endGame() {
+  board = sweepRemaining(board);
+  gameOver = true;
+  const [p1, p2] = [board[PLAYERS[0].pot], board[PLAYERS[1].pot]];
+  const verdict =
+    p1 === p2
+      ? "It's a tie!"
+      : `${PLAYER_NAMES[p1 > p2 ? 0 : 1]} wins ${Math.max(p1, p2)}–${Math.min(p1, p2)}!`;
+  messageDisplay.textContent = `${verdict} Press OK to play again.`;
+  draw();
+}
+
+async function playMove() {
+  if (selected === null || board[selected] === 0) return;
+  sowing = true;
+  messageDisplay.textContent = '';
+  draw();
+
+  const opponentPot = PLAYERS[1 - turn].pot;
+  const result = await getNextBoardState(
+    board,
+    selected,
+    async (state, index) => {
+      renderer3d.render(state, index);
+      await new Promise(resolve => setTimeout(resolve, SOW_STEP_MS));
+    },
+    opponentPot
+  );
+
+  board = result.nextState;
+  sowing = false;
+
+  if (sideEmpty(board, 0) || sideEmpty(board, 1)) {
+    endGame();
+    return;
+  }
+
+  if (result.canGoAgain) {
+    messageDisplay.textContent = `${PLAYER_NAMES[turn]} goes again!`;
+  } else {
+    turn = 1 - turn;
+  }
+  selected = firstNonEmptyPit(turn);
+  draw();
+}
+
+function controllerForPlayer(player) {
+  for (const [controllerId, assigned] of assignments) {
+    if (assigned === player) return controllerId;
+  }
+  return null;
+}
+
+function handlePress(controllerId, direction) {
+  // Assign unknown controllers to the first free player slot.
+  if (!assignments.has(controllerId)) {
+    const free = [0, 1].find(player => controllerForPlayer(player) === null);
+    if (free === undefined) return; // spectators can't play
+    assignments.set(controllerId, free);
+    updateStatus();
+  }
+
+  if (sowing) return;
+
+  if (gameOver) {
+    if (direction === 'ok') resetGame();
+    return;
+  }
+
+  // Enforce turns once both players have a controller. With a single
+  // controller connected it drives both players (pass-and-play).
+  if (assignedPlayerCount() >= 2 && assignments.get(controllerId) !== turn) {
+    messageDisplay.textContent = `Not your turn — waiting on ${PLAYER_NAMES[turn]}.`;
+    return;
+  }
+
+  if (direction === 'down' || direction === 'right') cycleSelection(1);
+  if (direction === 'up' || direction === 'left') cycleSelection(-1);
+  if (direction === 'ok') {
+    playMove();
+    return;
+  }
+  draw();
+}
+
+function updateStatus() {
+  const players = assignedPlayerCount();
+  if (players === 0) {
+    status.textContent = 'Scan the QR code to join as a player.';
+  } else if (players === 1) {
+    status.textContent = '1 controller connected (driving both players). Scan to join as Player 2.';
+  } else {
+    status.textContent = 'Both players connected.';
+  }
 }
 
 function connect() {
   const ws = new WebSocket('ws://' + location.host + '/ws?role=host');
-  ws.onopen = () => { status.textContent = 'Connected. Waiting for input...'; };
-  let currMancalaBoard = BASE_BOARD_STATE;
-  let selectedMancalaIdx = 1;
-  ws.onmessage = async (event) => {
+  ws.onopen = () => updateStatus();
+  ws.onmessage = (event) => {
     try {
       const msg = JSON.parse(event.data);
-      if (msg.type === 'press' && msg.direction in arrows) {
-        lastPress.textContent = arrows[msg.direction] + ' ' + msg.direction;
-        if (msg.direction === 'down') selectedMancalaIdx = (selectedMancalaIdx + 1) % BASE_BOARD_STATE.length;
-        if (msg.direction === 'up') selectedMancalaIdx = ((selectedMancalaIdx - 1) + BASE_BOARD_STATE.length) % BASE_BOARD_STATE.length;
+      if (msg.type === 'press' && msg.controllerId) {
+        handlePress(msg.controllerId, msg.direction);
       }
-      if (msg.type === 'press' && msg.direction === 'ok') {
-        const result = (await getNextBoardState(currMancalaBoard, selectedMancalaIdx, async (state, idx) => {
-          renderBoard(state, idx);
-          await new Promise((res, _) => { setTimeout(() => { res() }, 500) });
-        }));
-        currMancalaBoard = result.nextState;
-        selectedMancalaIdx = result.finalIdx;
+      if (msg.type === 'controller-left' && assignments.has(msg.controllerId)) {
+        assignments.delete(msg.controllerId);
+        updateStatus();
       }
-
-      console.log(currMancalaBoard)
-      console.log(asciiDrawMancalaBoard(currMancalaBoard, selectedMancalaIdx))
-
-      renderBoard(currMancalaBoard, selectedMancalaIdx);
-
     } catch (e) {
       console.error(e);
     }
@@ -44,5 +190,6 @@ function connect() {
     setTimeout(connect, 1000);
   };
 }
-connect();
 
+resetGame();
+connect();

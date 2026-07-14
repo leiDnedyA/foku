@@ -40,11 +40,50 @@ function isInPot(index) {
 }
 
 /**
+ * Player definitions. Each player owns one pot and the six pits
+ * that sow towards it (see board map above).
+ */
+export const PLAYERS = [
+  { pot: 0, pits: [1, 2, 3, 13, 12, 11] },
+  { pot: 7, pits: [4, 5, 6, 10, 9, 8] },
+];
+
+/** @returns {number | null} the player owning the given pit index, or null for pots */
+export function playerForPit(index) {
+  for (let player = 0; player < PLAYERS.length; player++) {
+    if (PLAYERS[player].pits.includes(index)) return player;
+  }
+  return null;
+}
+
+/** @returns {boolean} true when all of the given player's pits are empty */
+export function sideEmpty(state, player) {
+  return PLAYERS[player].pits.every(index => state[index] === 0);
+}
+
+/**
+ * Moves every stone left in each player's pits into that player's pot.
+ * @returns {number[]} the swept board state
+ */
+export function sweepRemaining(state) {
+  const nextState = [...state];
+  for (const { pot, pits } of PLAYERS) {
+    for (const index of pits) {
+      nextState[pot] += nextState[index];
+      nextState[index] = 0;
+    }
+  }
+  return nextState;
+}
+
+/**
  * @param currState
  * @param moveStartIndex
+ * @param renderBoard optional async callback invoked with each intermediate state
+ * @param skipIndex optional board index to skip while sowing (the opponent's pot)
  * @returns Promise<{{ canGoAgain: boolean; nextState: BoardState; finalIdx: number }}>
  * */
-export async function getNextBoardState(currState, moveStartIndex, renderBoard) {
+export async function getNextBoardState(currState, moveStartIndex, renderBoard, skipIndex = null) {
   let nextState = [...currState];
   if (isInPot(moveStartIndex)) {
     throw new Error("Tried to move starting in pot.");
@@ -70,6 +109,9 @@ export async function getNextBoardState(currState, moveStartIndex, renderBoard) 
     // drop a stone
     currHandCount--;
     currIndex = (currIndex + 1) % BASE_BOARD_STATE.length;
+    if (currIndex === skipIndex) {
+      currIndex = (currIndex + 1) % BASE_BOARD_STATE.length;
+    }
     const spaceCountAfterMove = ++nextState[currIndex];
 
     // if hand is empty
