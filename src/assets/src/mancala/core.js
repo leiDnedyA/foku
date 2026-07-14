@@ -104,7 +104,7 @@ export async function getNextBoardState(currState, moveStartIndex, renderBoard, 
       console.log(asciiDrawMancalaBoard(nextState))
     }
     if (renderBoard) {
-      await renderBoard(nextState, currIndex);
+      await renderBoard(nextState, currIndex, currHandCount);
     }
     // drop a stone
     currHandCount--;

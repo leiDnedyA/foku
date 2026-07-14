@@ -7,6 +7,7 @@ const PIT_RADIUS = 0.85;
 const POT_RADIUS = 1.15;
 const PIT_SPACING = 2.1;
 const ROW_Z = 1.7;
+const SHOW_STONE_COUNT = false;
 
 // can be null, 0, or 1 => nobody's turn, player 1, player 2
 let turnViewState = null;
@@ -210,7 +211,7 @@ export function createRenderer3D(container) {
         view.stones.remove(view.stones.children[view.stones.children.length - 1]);
       }
 
-      view.label.set(count);
+      if (SHOW_STONE_COUNT) view.label.set(count);
     }
 
     if (selectedIndex === null) {

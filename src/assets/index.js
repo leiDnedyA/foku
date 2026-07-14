@@ -94,8 +94,10 @@ async function playMove() {
   const result = await getNextBoardState(
     board,
     selected,
-    async (state, index) => {
+    async (state, index, handCount) => {
       renderer3d.render(state, index, turn);
+
+      messageDisplay.textContent = `${handCount} in hand.`;
       await new Promise(resolve => setTimeout(resolve, SOW_STEP_MS));
     },
     opponentPot
