@@ -10,7 +10,12 @@ const PIT_SPACING = 2.1;
 const ROW_Z = 1.7;
 const SHOW_STONE_COUNT = false;
 const BOARD_TOP_TEXTURE_URL = new URL('../../images/board.png', import.meta.url).href;
+const BACKGROUND_TEXTURE_URL = new URL('../../images/background.png', import.meta.url).href;
 const BOX_TOP_MATERIAL_INDEX = 2;
+const SKYBOX_RADIUS = 80;
+const SKYBOX_ROTATION_SPEED = 0.018;
+const SKYBOX_TEXTURE_SCROLL_SPEED = 0.004;
+const BACKGROUND_PLANE_SCROLL_SPEED = 0.012;
 
 // can be null, 0, or 1 => nobody's turn, player 1, player 2
 let turnViewState = null;
@@ -91,6 +96,33 @@ function stoneLocalPosition(stoneIndex, maxRadius) {
   );
 }
 
+function loadBackgroundTexture(renderer, textureLoader, repeatX, repeatY) {
+  const texture = textureLoader.load(BACKGROUND_TEXTURE_URL);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(repeatX, repeatY);
+  texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return texture;
+}
+
+function createRollingSkybox(renderer, textureLoader) {
+  const texture = loadBackgroundTexture(renderer, textureLoader, 2, 1);
+
+  const mesh = new THREE.Mesh(
+    new THREE.SphereGeometry(SKYBOX_RADIUS, 64, 32),
+    new THREE.MeshBasicMaterial({
+      map: texture,
+      side: THREE.BackSide,
+      depthWrite: false
+    })
+  );
+  mesh.frustumCulled = false;
+  mesh.raycast = () => {};
+
+  return { mesh, texture };
+}
+
 export function createRenderer3D(container) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xaaaaaa);
@@ -122,6 +154,10 @@ export function createRenderer3D(container) {
   renderer.setSize(container.clientWidth, container.clientHeight);
   container.appendChild(renderer.domElement);
 
+  const textureLoader = new THREE.TextureLoader();
+  const rollingSkybox = createRollingSkybox(renderer, textureLoader);
+  scene.add(rollingSkybox.mesh);
+
   window.addEventListener('resize', () => {
     camera.aspect = container.clientWidth / container.clientHeight;
     camera.updateProjectionMatrix();
@@ -138,17 +174,18 @@ export function createRenderer3D(container) {
   scene.add(fill);
 
   // Table surface
+  const backgroundPlaneTexture = loadBackgroundTexture(renderer, textureLoader, 1.35, 1.35);
   const table = new THREE.Mesh(
     new THREE.PlaneGeometry(60, 60),
-    new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.95 })
+    new THREE.MeshBasicMaterial({ map: backgroundPlaneTexture })
   );
   table.rotation.x = -Math.PI / 2;
-  table.position.y = -BOARD_HEIGHT;
+  table.position.y = -BOARD_HEIGHT - 0.04;
   scene.add(table);
 
   // Board base
   const wood = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.7 });
-  const boardTopTexture = new THREE.TextureLoader().load(BOARD_TOP_TEXTURE_URL);
+  const boardTopTexture = textureLoader.load(BOARD_TOP_TEXTURE_URL);
   boardTopTexture.colorSpace = THREE.SRGBColorSpace;
   boardTopTexture.center.set(0.5, 0.5);
   boardTopTexture.rotation = Math.PI / 2;
@@ -247,12 +284,17 @@ export function createRenderer3D(container) {
     const t = performance.now() / 1000;
     const pulse = 1 + Math.sin(t * 4) * 0.06;
     highlight.scale.set(pulse, pulse, 1);
+    rollingSkybox.mesh.rotation.y = t * SKYBOX_ROTATION_SPEED;
+    rollingSkybox.texture.offset.x = (t * SKYBOX_TEXTURE_SCROLL_SPEED) % 1;
+    backgroundPlaneTexture.offset.x = (t * BACKGROUND_PLANE_SCROLL_SPEED) % 1;
+    backgroundPlaneTexture.offset.y = (t * BACKGROUND_PLANE_SCROLL_SPEED * 0.5) % 1;
 
     const cameraMoveSpeed = 0.05;
 
     camera.position.lerp(targetCameraPosition, cameraMoveSpeed);
     currentCameraLookAt.lerp(targetCameraLookAt, cameraMoveSpeed);
     camera.lookAt(currentCameraLookAt);
+    rollingSkybox.mesh.position.copy(camera.position);
 
     renderer.render(scene, camera);
   }
