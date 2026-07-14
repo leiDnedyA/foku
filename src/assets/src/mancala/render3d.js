@@ -17,11 +17,11 @@ let turnViewState = null;
 
 const TURN_CAMERA_POSITIONS = {
   null: [0, 13, 11],
-  0: [-15.5, 15, 0],
-  1: [15.5, 15, 0],
+  0: [-13.5, 15, 0],
+  1: [13.5, 15, 0],
 }
 
-const CAMERA_LOOKAT = [0, 0, 0.5];
+const CAMERA_LOOKAT = [0, -3, 0.5];
 
 /**
  * Board index -> world position on top of the board.
