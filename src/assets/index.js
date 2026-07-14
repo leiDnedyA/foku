@@ -12,7 +12,7 @@ const turnDisplay = document.getElementById('turn');
 const messageDisplay = document.getElementById('message');
 
 const PLAYER_NAMES = ['Player 1', 'Player 2'];
-const PLAYER_COLORS = ['#6fb3ff', '#ff9d6f'];
+const PLAYER_COLORS = ['#ff0000', '#0000ff'];
 const SOW_STEP_MS = 450;
 
 const renderer3d = createRenderer3D(document.getElementById('scene'));
@@ -58,7 +58,7 @@ function updateHud() {
 }
 
 function draw() {
-  renderer3d.render(board, sowing || gameOver ? null : selected, turn);
+  renderer3d.render(board, sowing || gameOver ? null : selected, turn, PLAYER_COLORS[turn] ?? null);
   updateHud();
 }
 
@@ -95,7 +95,7 @@ async function playMove() {
     board,
     selected,
     async (state, index, handCount) => {
-      renderer3d.render(state, index, turn);
+      renderer3d.render(state, index, turn, PLAYER_COLORS[turn] ?? null);
 
       messageDisplay.textContent = `${handCount} in hand.`;
       await new Promise(resolve => setTimeout(resolve, SOW_STEP_MS));

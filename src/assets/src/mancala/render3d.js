@@ -93,7 +93,7 @@ function stoneLocalPosition(stoneIndex, maxRadius) {
 
 export function createRenderer3D(container) {
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x111111);
+  scene.background = new THREE.Color(0xaaaaaa);
 
   const targetCameraPosition = new THREE.Vector3();
   const targetCameraLookAt = new THREE.Vector3();
@@ -140,14 +140,14 @@ export function createRenderer3D(container) {
   // Table surface
   const table = new THREE.Mesh(
     new THREE.PlaneGeometry(60, 60),
-    new THREE.MeshStandardMaterial({ color: 0x1c1c22, roughness: 0.95 })
+    new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.95 })
   );
   table.rotation.x = -Math.PI / 2;
   table.position.y = -BOARD_HEIGHT;
   scene.add(table);
 
   // Board base
-  const wood = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.7 });
+  const wood = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.7 });
   const boardTopTexture = new THREE.TextureLoader().load(BOARD_TOP_TEXTURE_URL);
   boardTopTexture.colorSpace = THREE.SRGBColorSpace;
   boardTopTexture.center.set(0.5, 0.5);
@@ -191,8 +191,8 @@ export function createRenderer3D(container) {
   const highlight = new THREE.Mesh(
     new THREE.TorusGeometry(PIT_RADIUS + 0.18, 0.07, 12, 40),
     new THREE.MeshStandardMaterial({
-      color: 0xffcc33,
-      emissive: 0xffaa00,
+      color: 0xff0000,
+      emissive: 0xff0000,
       emissiveIntensity: 1.4,
       roughness: 0.4
     })
@@ -201,7 +201,7 @@ export function createRenderer3D(container) {
   highlight.visible = false;
   scene.add(highlight);
 
-  function render(state, selectedIndex = null, turn = null) {
+  function render(state, selectedIndex = null, turn = null, playerColor = null) {
     for (let index = 0; index < 14; index++) {
       const view = pitViews[index];
       const count = state[index];
@@ -229,6 +229,10 @@ export function createRenderer3D(container) {
       const { x, z } = positionForIndex(selectedIndex);
       highlight.visible = true;
       highlight.position.set(x, 0.1, z);
+      if (playerColor !== null) {
+        highlight.material.color = new THREE.Color(playerColor);
+        highlight.material.emissive = new THREE.Color(playerColor);
+      }
     }
 
     if (turn !== turnViewState) {
