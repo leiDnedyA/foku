@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { initClickLogger } from './clickLogger.js';
 
 const BOARD_LENGTH = 17;
 const BOARD_WIDTH = 7.5;
@@ -8,14 +9,16 @@ const POT_RADIUS = 1.15;
 const PIT_SPACING = 2.1;
 const ROW_Z = 1.7;
 const SHOW_STONE_COUNT = false;
+const BOARD_TOP_TEXTURE_URL = new URL('../../images/board.png', import.meta.url).href;
+const BOX_TOP_MATERIAL_INDEX = 2;
 
 // can be null, 0, or 1 => nobody's turn, player 1, player 2
 let turnViewState = null;
 
 const TURN_CAMERA_POSITIONS = {
   null: [0, 13, 11],
-  0: [-13, 13, 11],
-  1: [13, 13, 11],
+  0: [-15.5, 15, 0],
+  1: [15.5, 15, 0],
 }
 
 const CAMERA_LOOKAT = [0, 0, 0.5];
@@ -26,13 +29,23 @@ const CAMERA_LOOKAT = [0, 0, 0.5];
  * (+z) towards pot 7; pits 8-13 run back along the far row (-z).
  */
 function positionForIndex(index) {
-  if (index === 0) return { x: -(BOARD_LENGTH / 2 - 1.6), z: 0, isPot: true };
-  if (index === 7) return { x: BOARD_LENGTH / 2 - 1.6, z: 0, isPot: true };
-  if (index >= 1 && index <= 6) {
-    return { x: (index - 3.5) * PIT_SPACING, z: ROW_Z, isPot: false };
-  }
-  // 8..13
-  return { x: (10.5 - index) * PIT_SPACING, z: -ROW_Z, isPot: false };
+  const indexMap = {
+    0: {  x: -7.20, z: 0, isPot: true  },
+    1: {  x: -5.43, z: 2.04, isPot: false  },
+    2: {  x: -3.78, z: 1.94, isPot: false  },
+    3: {  x: -1.83, z: 1.91, isPot: false  },
+    4: {  x: 0.23,  z: 2.02, isPot: false  },
+    5: {  x: 2.02,  z: 2.17, isPot: false  },
+    6: {  x: 3.83,  z: 2.26, isPot: false  },
+    7: {  x: 6.22,  z: 0.04, isPot: true  },
+    8: {  x: 4.24,  z: -1.84, isPot: false  },
+    9: {  x: 2.16,  z: -1.78, isPot: false  },
+    10:{  x: 0.62,  z: -1.75, isPot: false  },
+    11:{  x: -1.69,  z: -1.75, isPot: false  },
+    12:{  x: -3.75,  z: -1.68, isPot: false  },
+    13:{  x: -5.25,  z: -1.36, isPot: false  },
+  };
+  return indexMap[index];
 }
 
 function makeCountLabel() {
@@ -98,6 +111,8 @@ export function createRenderer3D(container) {
     100
   );
 
+  initClickLogger(scene, camera)
+
   camera.position.set(...TURN_CAMERA_POSITIONS[null]);
   camera.lookAt(...CAMERA_LOOKAT);
   moveCameraTo(camera.position, new THREE.Vector3(...CAMERA_LOOKAT))
@@ -133,15 +148,28 @@ export function createRenderer3D(container) {
 
   // Board base
   const wood = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.7 });
+  const boardTopTexture = new THREE.TextureLoader().load(BOARD_TOP_TEXTURE_URL);
+  boardTopTexture.colorSpace = THREE.SRGBColorSpace;
+  boardTopTexture.center.set(0.5, 0.5);
+  boardTopTexture.rotation = Math.PI / 2;
+  boardTopTexture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
+  const boardTop = new THREE.MeshStandardMaterial({
+    map: boardTopTexture,
+    color: 0xffffff,
+    roughness: 0.82
+  });
+  const boardMaterials = Array.from({ length: 6 }, (_, index) =>
+    index === BOX_TOP_MATERIAL_INDEX ? boardTop : wood
+  );
   const board = new THREE.Mesh(
     new THREE.BoxGeometry(BOARD_LENGTH, BOARD_HEIGHT, BOARD_WIDTH),
-    wood
+    boardMaterials
   );
   board.position.y = -BOARD_HEIGHT / 2;
   scene.add(board);
 
   // Pits, pots, stones, labels
-  const pitWell = new THREE.MeshStandardMaterial({ color: 0x4a2d13, roughness: 0.9 });
   const stoneGeometry = new THREE.SphereGeometry(0.26, 20, 14);
   const stoneMaterials = [0x9db4c8, 0x8fa8c0, 0xa8b8b0, 0xb0a493].map(
     color => new THREE.MeshStandardMaterial({ color, roughness: 0.35, metalness: 0.15 })
@@ -152,30 +180,11 @@ export function createRenderer3D(container) {
     const { x, z, isPot } = positionForIndex(index);
     const radius = isPot ? POT_RADIUS : PIT_RADIUS;
 
-    const well = new THREE.Mesh(
-      new THREE.CylinderGeometry(radius, radius * 0.8, 0.35, 32),
-      pitWell
-    );
-    well.position.set(x, -0.15, z);
-    scene.add(well);
-
-    const rim = new THREE.Mesh(
-      new THREE.TorusGeometry(radius, 0.07, 12, 40),
-      wood
-    );
-    rim.rotation.x = Math.PI / 2;
-    rim.position.set(x, 0.04, z);
-    scene.add(rim);
-
     const stones = new THREE.Group();
     stones.position.set(x, 0, z);
     scene.add(stones);
 
-    const label = makeCountLabel();
-    label.sprite.position.set(x, 1.6, z + (isPot ? 0 : Math.sign(z) * 0.4));
-    scene.add(label.sprite);
-
-    pitViews.push({ radius, stones, label });
+    pitViews.push({ radius, stones/*, label*/ });
   }
 
   // Selection highlight ring
