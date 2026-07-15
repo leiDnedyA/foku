@@ -10,7 +10,7 @@ const PIT_SPACING = 2.1;
 const ROW_Z = 1.7;
 const SHOW_STONE_COUNT = false;
 const BOARD_TOP_TEXTURE_URL = new URL('../../images/board.png', import.meta.url).href;
-const BACKGROUND_TEXTURE_URL = new URL('../../images/background.png', import.meta.url).href;
+const BACKGROUND_TEXTURE_URL = new URL('../../images/background.jpeg', import.meta.url).href;
 const BOX_TOP_MATERIAL_INDEX = 2;
 const SKYBOX_RADIUS = 80;
 const SKYBOX_ROTATION_SPEED = 0.018;
@@ -165,8 +165,8 @@ export function createRenderer3D(container) {
   });
 
   // Lighting
-  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-  const sun = new THREE.DirectionalLight(0xfff2dd, 1.6);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.95));
+  const sun = new THREE.DirectionalLight(0xffffff, 2.6);
   sun.position.set(6, 12, 5);
   scene.add(sun);
   const fill = new THREE.DirectionalLight(0x8899ff, 0.4);
