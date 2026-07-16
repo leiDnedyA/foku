@@ -43,9 +43,15 @@ function updateSelection(direction) {
   const pits = PLAYERS[turn].pits;
   const availablePits = pits.filter(pit => board[pit] !== 0);
   if (selected === null) selected = pits[0];
+  const prevSelected = selected;
   do {
     selected = moveCursorInDirection(turn, selected, direction);
   } while (!availablePits.includes(selected));
+  // If same position is selected, cycle to next available
+  if (selected === prevSelected) {
+    const selectedIdx = availablePits.findIndex(selected);
+    selected = availablePits[(selectedIdx + 1) % availablePits.length];
+  }
   playSound('thump.mp3');
 }
 
@@ -62,6 +68,9 @@ function draw() {
 }
 
 function resetGame() {
+  if (gameOverSound !== null) {
+    stopSound(gameOverSound);
+  }
   board = [...BASE_BOARD_STATE];
   turn = 0;
   gameOver = false;
@@ -71,8 +80,9 @@ function resetGame() {
   draw();
 }
 
+let gameOverSound = null;
 function endGame() {
-  const audio = playSound('dope_beat.mp3');
+  gameOverSound = playSound('dope_beat.mp3');
   board = sweepRemaining(board);
   gameOver = true;
   const [p1, p2] = [board[PLAYERS[0].pot], board[PLAYERS[1].pot]];
@@ -81,7 +91,6 @@ function endGame() {
       ? "It's a tie!"
       : `${PLAYER_NAMES[p1 > p2 ? 0 : 1]} wins ${Math.max(p1, p2)}–${Math.min(p1, p2)}!`;
   messageDisplay.textContent = `${verdict} Press OK to play again.`;
-  stopSound(audio);
   draw();
 }
 
