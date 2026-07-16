@@ -7,6 +7,7 @@ import {
   sweepRemaining
 } from './src/mancala/core.js';
 import { createRenderer3D } from './src/mancala/render3d.js';
+import { playSound } from './src/mancala/sound.js';
 
 const status = document.getElementById('status');
 const turnDisplay = document.getElementById('turn');
@@ -41,9 +42,11 @@ function updateSelection(direction) {
   const pits = PLAYERS[turn].pits;
   const availablePits = pits.filter(pit => board[pit] !== 0);
   if (selected === null) selected = pits[0];
+  const prevSelected = selected;
   do {
     selected = moveCursorInDirection(turn, selected, direction);
   } while (!availablePits.includes(selected));
+  if (prevSelected !== selected) playSound('pop.mp3')
 }
 
 function updateHud() {
