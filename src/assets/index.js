@@ -10,6 +10,7 @@ import { createRenderer3D } from './src/mancala/render3d.js';
 const status = document.getElementById('status');
 const turnDisplay = document.getElementById('turn');
 const messageDisplay = document.getElementById('message');
+const qrCode = document.getElementById('qr-code');
 
 const PLAYER_NAMES = ['Player 1', 'Player 2'];
 const PLAYER_COLORS = ['#ff0000', '#0000ff'];
@@ -53,8 +54,6 @@ function updateHud() {
     turnDisplay.textContent = '';
     return;
   }
-  turnDisplay.textContent = `${PLAYER_NAMES[turn]}'s turn`;
-  turnDisplay.style.color = PLAYER_COLORS[turn];
 }
 
 function draw() {
@@ -97,7 +96,7 @@ async function playMove() {
     async (state, index, handCount) => {
       renderer3d.render(state, index, turn, PLAYER_COLORS[turn] ?? null);
 
-      messageDisplay.textContent = `${handCount} in hand.`;
+      // messageDisplay.textContent = `${handCount} in hand.`;
       await new Promise(resolve => setTimeout(resolve, SOW_STEP_MS));
     },
     opponentPot
@@ -159,15 +158,28 @@ function handlePress(controllerId, direction) {
   draw();
 }
 
+let currStatusTimeout = null;
+const STATUS_TEXT_DURATION_MS = 5_000;
 function updateStatus() {
   const players = assignedPlayerCount();
+  if (currStatusTimeout !== null) {
+    clearTimeout(currStatusTimeout);
+  }
   if (players === 0) {
-    status.textContent = 'Scan the QR code to join as a player.';
+    status.textContent = 'Scan the QR code to join.';
+    qrCode.style.setProperty('visibility', '')
   } else if (players === 1) {
     status.textContent = '1 controller connected (driving both players). Scan to join as Player 2.';
-  } else {
-    status.textContent = 'Both players connected.';
+  } else if (players === 2) {
+    status.textContent = 'Both players connected.'; 
   }
+
+  qrCode.style.setProperty(
+    'visibility', players >= 2 ? 'hidden' : 'visible' );
+
+  currStatusTimeout = setTimeout(() => {
+    status.textContent = '';
+  }, STATUS_TEXT_DURATION_MS);
 }
 
 function connect() {
