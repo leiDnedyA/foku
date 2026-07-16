@@ -35,20 +35,20 @@ const CAMERA_LOOKAT = [0, -3, 0.5];
  */
 function positionForIndex(index) {
   const indexMap = {
-    0: {  x: -7.20, z: 0, isPot: true  },
-    1: {  x: -5.43, z: 2.04, isPot: false  },
-    2: {  x: -3.78, z: 1.94, isPot: false  },
-    3: {  x: -1.83, z: 1.91, isPot: false  },
-    4: {  x: 0.23,  z: 2.02, isPot: false  },
-    5: {  x: 2.02,  z: 2.17, isPot: false  },
-    6: {  x: 3.83,  z: 2.26, isPot: false  },
-    7: {  x: 6.22,  z: 0.04, isPot: true  },
-    8: {  x: 4.24,  z: -1.84, isPot: false  },
-    9: {  x: 2.16,  z: -1.78, isPot: false  },
-    10:{  x: 0.62,  z: -1.75, isPot: false  },
-    11:{  x: -1.69,  z: -1.75, isPot: false  },
-    12:{  x: -3.75,  z: -1.68, isPot: false  },
-    13:{  x: -5.25,  z: -1.36, isPot: false  },
+    0: {  x: -6.13, z: -.03, isPot: true  },
+    1: {  x: -3.74, z: 1.75, isPot: false  },
+    2: {  x: -1.97, z: 1.71, isPot: false  },
+    3: {  x: -0.59, z: 1.76, isPot: false  },
+    4: {  x: 1.63,  z: 1.68, isPot: false  },
+    5: {  x: 3.66,  z: 1.38, isPot: false  },
+    6: {  x: 5.26,  z: 1.38, isPot: false  },
+    7: {  x: 7.22,  z: 0.14, isPot: true  },
+    8: {  x: 5.29,  z: -1.88, isPot: false  },
+    9: {  x: 3.75,  z: -2.19, isPot: false  },
+    10:{  x: 1.74,  z: -1.98, isPot: false  },
+    11:{  x: -0.18,  z: -2.01, isPot: false  },
+    12:{  x: -1.91,  z: -2.05, isPot: false  },
+    13:{  x: -3.73,  z: -2.09, isPot: false  },
   };
   return indexMap[index];
 }
