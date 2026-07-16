@@ -15,7 +15,7 @@ const turnDisplay = document.getElementById('turn');
 const messageDisplay = document.getElementById('message');
 const qrCode = document.getElementById('qr-code');
 
-const PLAYER_NAMES = ['Player 1', 'Player 2'];
+const PLAYER_NAMES = ['RED', 'BLUE'];
 const PLAYER_COLORS = ['#ff0000', '#0000ff'];
 const SOW_STEP_MS = 450;
 
