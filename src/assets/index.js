@@ -49,7 +49,7 @@ function updateSelection(direction) {
   } while (!availablePits.includes(selected));
   // If same position is selected, cycle to next available
   if (selected === prevSelected) {
-    const selectedIdx = availablePits.findIndex(selected);
+    const selectedIdx = availablePits.indexOf(selected);
     selected = availablePits[(selectedIdx + 1) % availablePits.length];
   }
   playSound('thump.mp3');
