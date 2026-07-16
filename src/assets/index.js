@@ -1,3 +1,4 @@
+import { moveCursorInDirection } from './src/mancala/controllerUtils.js';
 import {
   BASE_BOARD_STATE,
   getNextBoardState,
@@ -36,17 +37,13 @@ function firstNonEmptyPit(player) {
   return PLAYERS[player].pits.find(index => board[index] > 0) ?? null;
 }
 
-function cycleSelection(direction) {
+function updateSelection(direction) {
   const pits = PLAYERS[turn].pits;
-  if (pits.every(index => board[index] === 0)) return;
-  let position = selected === null ? 0 : pits.indexOf(selected);
-  for (let step = 0; step < pits.length; step++) {
-    position = (position + direction + pits.length) % pits.length;
-    if (board[pits[position]] > 0) {
-      selected = pits[position];
-      return;
-    }
-  }
+  const availablePits = pits.filter(pit => board[pit] !== 0);
+  if (selected === null) selected = pits[0];
+  do {
+    selected = moveCursorInDirection(turn, selected, direction);
+  } while (!availablePits.includes(selected));
 }
 
 function updateHud() {
@@ -149,11 +146,11 @@ function handlePress(controllerId, direction) {
     return;
   }
 
-  if (direction === 'down' || direction === 'right') cycleSelection(1);
-  if (direction === 'up' || direction === 'left') cycleSelection(-1);
   if (direction === 'ok') {
     playMove();
     return;
+  } else {
+    updateSelection(direction);
   }
   draw();
 }
