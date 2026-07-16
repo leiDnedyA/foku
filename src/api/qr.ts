@@ -1,4 +1,5 @@
 import QRCode from 'qrcode';
+import { invertImage } from '../util/image';
 
 export async function generateQRCodeBuffer(text: string): Promise<Buffer> {
   try {
@@ -8,7 +9,7 @@ export async function generateQRCodeBuffer(text: string): Promise<Buffer> {
       errorCorrectionLevel: 'M',
       margin: 3,
       scale: 4
-    });
+    }).then(invertImage);
 
   } catch (error) {
     console.error('Failed to generate QR Code:', error);
