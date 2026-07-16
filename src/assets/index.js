@@ -8,7 +8,7 @@ import {
   sweepRemaining
 } from './src/mancala/core.js';
 import { createRenderer3D } from './src/mancala/render3d.js';
-import { playSound } from './src/mancala/sound.js';
+import { playSound, stopSound } from './src/mancala/sound.js';
 
 const status = document.getElementById('status');
 const turnDisplay = document.getElementById('turn');
@@ -43,15 +43,10 @@ function updateSelection(direction) {
   const pits = PLAYERS[turn].pits;
   const availablePits = pits.filter(pit => board[pit] !== 0);
   if (selected === null) selected = pits[0];
-  const prevSelected = selected;
   do {
     selected = moveCursorInDirection(turn, selected, direction);
   } while (!availablePits.includes(selected));
-  if (prevSelected !== selected) {
-    playSound('pop.mp3');
-  } else {
-    playSound('honk.mp3');
-  }
+  playSound('thump.mp3');
 }
 
 function updateHud() {
@@ -77,6 +72,7 @@ function resetGame() {
 }
 
 function endGame() {
+  const audio = playSound('dope_beat.mp3');
   board = sweepRemaining(board);
   gameOver = true;
   const [p1, p2] = [board[PLAYERS[0].pot], board[PLAYERS[1].pot]];
@@ -85,6 +81,7 @@ function endGame() {
       ? "It's a tie!"
       : `${PLAYER_NAMES[p1 > p2 ? 0 : 1]} wins ${Math.max(p1, p2)}–${Math.min(p1, p2)}!`;
   messageDisplay.textContent = `${verdict} Press OK to play again.`;
+  stopSound(audio);
   draw();
 }
 
@@ -123,7 +120,7 @@ async function playMove() {
     playSound('yay.mp3');
   } else {
     turn = 1 - turn;
-    playSound('bell.mp3');
+    playSound('woosh.mp3');
   }
   selected = firstNonEmptyPit(turn);
   draw();

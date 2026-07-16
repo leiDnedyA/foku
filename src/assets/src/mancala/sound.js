@@ -1,6 +1,11 @@
 
 export function playSound(fileName) {
-  const music = new Audio('host/sounds/' + fileName);
-  music.loop = false;
-  music.play();
+  const audio = new Audio('host/sounds/' + fileName);
+  audio.loop = false;
+  audio.play();
+  return audio;
+}
+
+export function stopSound(audio) {
+  audio?.pause();
 }
