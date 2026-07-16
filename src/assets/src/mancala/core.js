@@ -35,7 +35,7 @@ export const BASE_BOARD_STATE = [
   4
 ];
 
-function isInPot(index) {
+export function isInPot(index) {
   return index === 0 || index === 7;
 }
 

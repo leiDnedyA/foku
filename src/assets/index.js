@@ -2,6 +2,7 @@ import { moveCursorInDirection } from './src/mancala/controllerUtils.js';
 import {
   BASE_BOARD_STATE,
   getNextBoardState,
+  isInPot,
   PLAYERS,
   sideEmpty,
   sweepRemaining
@@ -46,7 +47,11 @@ function updateSelection(direction) {
   do {
     selected = moveCursorInDirection(turn, selected, direction);
   } while (!availablePits.includes(selected));
-  if (prevSelected !== selected) playSound('pop.mp3')
+  if (prevSelected !== selected) {
+    playSound('pop.mp3');
+  } else {
+    playSound('honk.mp3');
+  }
 }
 
 function updateHud() {
@@ -95,8 +100,11 @@ async function playMove() {
     selected,
     async (state, index, handCount) => {
       renderer3d.render(state, index, turn, PLAYER_COLORS[turn] ?? null);
-
-      // messageDisplay.textContent = `${handCount} in hand.`;
+      if (isInPot(index)) {
+        playSound('bell2.mp3');
+      } else {
+        playSound('tap.mp3');
+      }
       await new Promise(resolve => setTimeout(resolve, SOW_STEP_MS));
     },
     opponentPot
@@ -111,9 +119,11 @@ async function playMove() {
   }
 
   if (result.canGoAgain) {
-    messageDisplay.textContent = `${PLAYER_NAMES[turn]} goes again!`;
+    // messageDisplay.textContent = `${PLAYER_NAMES[turn]} goes again!`;
+    playSound('yay.mp3');
   } else {
     turn = 1 - turn;
+    playSound('bell.mp3');
   }
   selected = firstNonEmptyPit(turn);
   draw();
