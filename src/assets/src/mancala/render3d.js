@@ -165,8 +165,8 @@ export function createRenderer3D(container) {
   });
 
   // Lighting
-  scene.add(new THREE.AmbientLight(0xffffff, 0.95));
-  const sun = new THREE.DirectionalLight(0xffffff, 2.6);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.6);
   sun.position.set(6, 12, 5);
   scene.add(sun);
   const fill = new THREE.DirectionalLight(0x8899ff, 0.4);
@@ -209,7 +209,7 @@ export function createRenderer3D(container) {
   // Pits, pots, stones, labels
   const stoneGeometry = new THREE.SphereGeometry(0.26, 20, 14);
   const stoneMaterials = [0xff0000, 0xffff00, 0x0000ff, 0x00aa33].map(
-    color => new THREE.MeshPhysicalMaterial({ color, transparent: true, opacity: .9, roughness: 0.35, metalness: 0.15 })
+    color => new THREE.MeshPhysicalMaterial({ color, transparent: true, opacity: .9, roughness: 0.35, metalness: 0.15, emissive: color, emissiveIntensity: .5 })
   );
 
   const pitViews = [];
